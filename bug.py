@@ -8,12 +8,8 @@ class Bug:
         self.y = y
         # self.color = random color
         if not brain:
-            if random.randint(0,1):
-                self.color = (1,1,1)
-                # self.brain = Brain([[-1],[1]], [0], [[0,0,1,0,0,0]], [0,0,0,0,0,0])
-            else:
-                self.color = (255,10,10)
-                # self.brain = Brain([[-1],[1]], [0], [[0,0,0,1,0,0]], [0,0,0,0,0,0])
+            self.brain = Brain()
+            self.color = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
         else:
             self.brain = brain
             self.color = color
@@ -39,8 +35,8 @@ class Bug:
             x,y = self.x, self.y + move_magnitude
         return x,y
     
-    def next_position(self):
-        next_move = self.brain.calculated_next_step([-1,0])
+    def next_position(self, input):
+        next_move = self.brain.calculated_next_step(input)
         if next_move == "random":
             return self._move_random()
         elif next_move == "up":
@@ -55,7 +51,7 @@ class Bug:
             return self.x,self.y
 
     def reproduce(self):
-        return Bug(0,0,self.brain, self.color)
+        return Bug(0,0,self.brain.mutate(), self.color)
 
     # def next_turn(self):
     #     move_magnitude = random.randint(-1,1)
@@ -72,4 +68,3 @@ class Bug:
 
 
         
-[[0,0,0],[0,0,0],[0,0,0],[0,0,0]]

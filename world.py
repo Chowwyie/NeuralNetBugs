@@ -23,8 +23,8 @@ class World:
 
     def successful_bugs(self):
         successful_bugs = []
-        for i in range(self.row_size//2):
-            for j in range(self.column_size):
+        for i in range(self.row_size//4, self.row_size//4*3):
+            for j in range(self.column_size//4, self.column_size//4*3):
                 if self.grid[i][j]:
                      successful_bugs.append(self.grid[i][j])
         return successful_bugs
@@ -35,8 +35,9 @@ class World:
         number_of_bugs = 0
         self.bugs = []
         while number_of_bugs < self.number_of_bugs:
-            bug = successful_bugs.pop(0)
-            successful_bugs.append(bug)
+            bug = random.choice(successful_bugs)
+            # bug = successful_bugs.pop(0)
+            # successful_bugs.append(bug)
             child_bug = bug.reproduce()
             x,y = self._find_vacated_coordinate()
             child_bug.place(x,y)
@@ -62,14 +63,24 @@ class World:
         return bugs
 
     def run_world(self):
-        global SCREEN, CLOCK
+        global WORLD_SURFACE, CLOCK
         pygame.init()
-        SCREEN = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        SCREEN = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+        WORLD_SURFACE = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
         CLOCK = pygame.time.Clock()
         self.draw_grid()
-        generation_steps = 80
+        generation_steps = 150
+        generations = 0
+        number_of_generations = 0
+        generation_string = "Generation: 0"
+        
+        font = pygame.font.Font('freesansbold.ttf', 20)
+        text = font.render(generation_string, True, (255,255,255), (0,0,0))
         while True:
             i = 0
+            number_of_generations += 1
+            generation_string = "Generation: " + str(number_of_generations)
+            text = font.render(generation_string, True, (255,255,255), (0,0,0))
             while i < generation_steps:
                 # pygame.clock.tick(40)
                 i += 1
@@ -78,16 +89,20 @@ class World:
                         pygame.quit()
                         sys.exit()
                 self.process_turns()
-                self.draw_grid()
-                CLOCK.tick(30)
-                pygame.display.update()
+                if number_of_generations > generations:
+                    self.draw_grid()
+                    CLOCK.tick(100000000)
+                    pygame.display.update()
+                    # SCREEN.blit(text, (320, 60))
+                    SCREEN.blit(text, (330, 720))
+                    SCREEN.blit(WORLD_SURFACE, (100, 100))
                 
             self.repopulate_bugs()
 
 
     def draw_grid(self):
-        SCREEN.fill((255,255,255))
-        SCREEN.fill((0,255,0), (0, 0, SCREEN.get_width()// 2, SCREEN.get_height()))
+        WORLD_SURFACE.fill((255,255,255))
+        # WORLD_SURFACE.fill((100,255,100), (WORLD_SURFACE.get_width()//4, WORLD_SURFACE.get_height()//4, WORLD_SURFACE.get_width()//2, WORLD_SURFACE.get_height()//2))
         self.draw_bugs()
 
     def draw_bugs(self):
@@ -96,11 +111,11 @@ class World:
 
     def draw_bug(self, bug):
         x, y = bug.x*self.block_size + self.block_size/2, bug.y*self.block_size + self.block_size/2
-        pygame.draw.circle(SCREEN, bug.color, (x, y), self.block_size/2)
+        pygame.draw.circle(WORLD_SURFACE, bug.color, (x, y), self.block_size/2)
 
     def process_turns(self):
         for bug in self.bugs:
-            x,y = bug.next_position()
+            x,y = bug.next_position([bug.x, bug.y, self.row_size-bug.x, self.column_size-bug.y])
             if 0 <= x < self.row_size and 0 <= y < self.column_size and not self.grid[x][y]:
                 self.grid[bug.x][bug.y] = 0
                 bug.place(x,y)
